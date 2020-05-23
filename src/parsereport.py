@@ -418,7 +418,7 @@ class OptionParser(argparse.ArgumentParser):
         self.add_argument("-?", "--help", action="help",
                           help="show this help message and exit")
         self.add_argument('--version', action='version',
-                          version='%(prog)s 1.0')
+                          version=f"%(prog)s {__version__}")
 
     def error(self, msg):
         sys.stderr.write("%s: error: %s\n\n" % (self.prog, msg, ))
@@ -477,6 +477,6 @@ if __name__ == '__main__':
     )
     if any((is_idle, is_pycharm, is_jupyter,)):
         main(['parsereport.py', '../data/',
-              '-e', 'david_petty@psbma.org',  ])
+              '-e', 'david_petty@psbma.org', ])
     else:
         main(sys.argv)
