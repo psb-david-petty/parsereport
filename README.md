@@ -19,3 +19,7 @@ optional arguments:
   -r, --resend              resend comment, if available (default: False)
   -v, --verbose             echo status information (default: False)
 </pre>
+
+<hr>
+
+[&#128279; permalink](https://psb-david-petty.github.io/parsereport) and [&#128297; repository](https://github.com/psb-david-petty/parsereport) for this page.
