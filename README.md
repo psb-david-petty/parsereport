@@ -22,6 +22,13 @@ optional arguments:
   -v, --verbose             echo status information (default: False)
 </pre>
 
+<h2 style="color: blue;">TODO</h2>
+
+- Document [Codecheck.it](http://codecheck.it/) and the `report.html` file more completely.
+- Document external programs used: [MacDown](https://macdown.uranusjr.com/) and [`jarsigner`](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/jarsigner.html).
+- Potentially add options for specifying locations of markdown editor &amp; [`jarsigner`](https://docs.oracle.com/javase/7/docs/technotes/tools/windows/jarsigner.html).
+- Potentially add options for SMTP server &amp; port (currently "smtp.gmail.com" &amp; 465).
+
 <hr>
 
 [&#128279; permalink](https://psb-david-petty.github.io/parsereport) and [&#128297; repository](https://github.com/psb-david-petty/parsereport) for this page.
