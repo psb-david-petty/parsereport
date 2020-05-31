@@ -348,6 +348,7 @@ class Mailer:
         self._message["To"] = self._recipient
         self._message.preamble = 'Invisible to a MIME-aware mail reader.\n'
 
+        # Create Message from data to prepare for send.
         tag = f"{self.subject} <{self._email}>" \
               f"{' NOT' if not self._signed else ''} SIGNED"
         message = Message(self._path, self._pf, tag, self._code, self._error,
