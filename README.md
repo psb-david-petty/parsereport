@@ -8,7 +8,8 @@ The `data/codecheck-*.signed.zip` files in this [repository](https://github.com/
 $ <strong style="color: green;">python3 src/parsereport.py -?</strong>
 usage: parsereport.py [-?] [--version] [-e ADDR] [-p PASS] [-r] [-v] PATH
 
-Read .SIGNED.ZIP files from PATH, parse report for e-mail address and code,
+Read .SIGNED.ZIP files from PATH; parse Codecheck.it report for e-mail
+address, score, and code; edit response and e-mail it back.
 
 positional arguments:
   PATH                      path to directory with .SIGNED.ZIP files
