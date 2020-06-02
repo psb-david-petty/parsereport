@@ -18,7 +18,7 @@ to students.
 __author__ = "David C. Petty"
 __copyright__ = "Copyright 2020, David C. Petty"
 __license__ = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __maintainer__ = "David C. Petty"
 __email__ = "david_petty@psbma.org"
 __status__ = "Hack"
@@ -430,8 +430,9 @@ class OptionParser(argparse.ArgumentParser):
 
 def main(argv):
     """ Parse command-line options to create reports and mail them ."""
-    description = """Read .SIGNED.ZIP files from PATH, parse report for e-mail
-    address and code, """
+    description = """Read .SIGNED.ZIP files from PATH; parse Codecheck.it
+    report for e-mail address, score, and code; edit response and e-mail it 
+    back."""
     formatter = lambda prog: \
         argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=30)
     parser = OptionParser(description=description, add_help=False,
