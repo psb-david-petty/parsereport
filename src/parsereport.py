@@ -194,7 +194,7 @@ Add comment here&hellip;"""
 ```"""
     _html_comment_format = '<!-- {comment} -->'
     _html_comment = _html_comment_format.format(comment='ONLY EDIT BELOW')
-    # TODO: HTML formatting is not used
+    # TODO: HTML formatting _html_format is not used
     _html_format = """
 <!DOCTYPE html>
 <html lang="en">
@@ -362,8 +362,9 @@ class Mailer:
         """Send message to recipient if message isnew."""
         if self.isnew:
             # Create secure connection with server and send email
+            smtp, port = "smtp.gmail.com", 465
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            with smtplib.SMTP_SSL(smtp, port, context=context) as server:
                 server.login(self._username, self._password)
                 server.sendmail(
                     self._sender, self._recipient, self._message.as_string()
@@ -431,7 +432,8 @@ def main(argv):
     """ Parse command-line options to create reports and mail them ."""
     description = """Read .SIGNED.ZIP files from PATH, parse report for e-mail
     address and code, """
-    formatter = lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=30)
+    formatter = lambda prog: \
+        argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=30)
     parser = OptionParser(description=description, add_help=False,
                           formatter_class=formatter)
     arguments = [
