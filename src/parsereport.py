@@ -61,6 +61,8 @@ class Zips:
 class Report:
     """Parse report.html extracted from path .ZIP file to extract values."""
 
+    _bogus = 'address'              # text signifying a bogus e-mail address
+
     def __init__(self, path, verbose=False):
         """Initialize Report and parse values:
         name, email, id, pf, score, path, signed, code, error"""
@@ -96,7 +98,8 @@ class Report:
         name_regex = re.compile('[^A-Za-z .]+', re.UNICODE)
         state = State.INIT
         # Parse XHTML text into an ElementTree.
-        root = xml.etree.ElementTree.fromstring(text)
+        parser = xml.etree.ElementTree.XMLParser(encoding='utf-8')
+        root = xml.etree.ElementTree.fromstring(text, parser)
         root.findall('.//{http://www.w3.org/1999/xhtml}meta')   # TODO: not used
         # Parse _id, _score, _code, _name, & _email.
         for element in root.iter():
@@ -141,8 +144,10 @@ class Report:
                     if match:
                         if self._verbose:
                             print(f"@author match: {match.groups()}")
-                        self._name = name_regex.sub('', match.group(2)).strip()
-                        self._email = match.group(3)
+                        name, email = match.group(2), match.group(3)
+                        if self._bogus not in email:
+                            self._name = name_regex.sub('', name).strip()
+                            self._email = email
             elif tag.lower().endswith('div'):
                 if 'provided' in attrib.get('class', '').lower():
                     state = State.DONE
@@ -175,7 +180,7 @@ class Report:
     def has_email(self):
         """Return True if report has valid (YOUR NAME <your@email.address>)
         e-mail address, but not the default (above), otherwise False."""
-        return self._name and self._email and 'address' not in self._email
+        return self._name and self._email and self._bogus not in self._email
 
 
 class Message:
