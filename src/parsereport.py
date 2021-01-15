@@ -371,8 +371,9 @@ class Mailer:
             context = ssl.create_default_context()
             with smtplib.SMTP_SSL(smtp, port, context=context) as server:
                 server.login(self._username, self._password)
-                server.sendmail(
-                    self._sender, self._recipient, self._message.as_string()
+                server.sendmail(self._sender,
+                    [self._recipient, self._sender, ],          # BCC _sender
+                    self._message.as_string()
                 )
             print(f'Sent to: {self._recipient}')
 
@@ -452,7 +453,7 @@ def main(argv):
     # Add optional arguments with values.
     for c1, c2, a, v, d, h in arguments:
         parser.add_argument(c1, c2, action=a, dest=v, default=d, help=h,)
-    # Add positional arguments. DIR is both the string and the variable.
+    # Add positional arguments. PATH is both the string and the variable.
     parser.add_argument("PATH", help="path to directory with .SIGNED.ZIP files")
     # Parse arguments.
     ns = parser.parse_args(args=argv[1: ])
