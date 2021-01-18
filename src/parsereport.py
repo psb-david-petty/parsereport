@@ -476,7 +476,8 @@ def main(argv):
                 print(mailer.message)
             mailer.send()
         else:
-            print(f"* ERROR: '{report.email}' not a valid e-mail address")
+            print(f"ERROR: '{report.email}' not a valid e-mail address "
+                  f"in '{os.path.basename(p)}'")
 
 
 if __name__ == '__main__':
