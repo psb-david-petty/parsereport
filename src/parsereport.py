@@ -76,18 +76,19 @@ class Report:
         self._code = list()
         self._error = list()
         self._verbose = verbose
-        with zipfile.ZipFile(path) as myzip:
-            with myzip.open('report.html') as myfile:
-                self._text = myfile.read().decode('utf-8')
-                self._parse(self._text)
+        if self.signed:
+            with zipfile.ZipFile(path) as myzip:
+                with myzip.open('report.html') as myfile:
+                    self._text = myfile.read().decode('utf-8')
+                    self._parse(self._text)
 
     @staticmethod
     def _is_signed(path):
         """Use jarsigner to verify path is a signed .JAR."""
         ret = subprocess.run(__jarsigner__ + [path, ],
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
-        return ret.returncode == 0
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        return ret.returncode == 0 and b'unsigned' not in ret.stdout
 
     def _parse(self, text):
         """Parse text according to Codecheck.it report.html format."""
@@ -163,11 +164,15 @@ class Report:
         """Return os.path.dirname(self._path)."""
         return os.path.dirname(self._path)
 
-    # TODO: not used
     @property
     def filename(self):
         """Return os.path.basename(self._path)."""
         return os.path.basename(self._path)
+
+    @property
+    def signed(self):
+        """Return self._signed."""
+        return self._signed
 
     @property
     def email(self):
@@ -469,15 +474,19 @@ def main(argv):
         report = Report(p, ns.VERBOSE)
         if ns.VERBOSE:
             print('values:', [f'{repr(x)}' for x in report.values()])
-        if report.has_email:
+        if report.signed and report.has_email:
             mailer = Mailer(*report.values(), ns.RESEND)
             if ns.VERBOSE:
                 print('message:')
                 print(mailer.message)
             mailer.send()
         else:
-            print(f"ERROR: '{report.email}' not a valid e-mail address "
-                  f"in '{os.path.basename(p)}'")
+            # Unsigned reports do not have valid e-mail addresses.
+            if not report.signed:
+                print(f"ERROR: '{report.filename}' is unsigned")
+            else:
+                print(f"ERROR: '{report.email}' not a valid e-mail address "
+                      f"in '{report.filename}'")
 
 
 if __name__ == '__main__':
