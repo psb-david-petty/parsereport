@@ -23,10 +23,13 @@ __maintainer__ = "David C. Petty"
 __email__ = "david_petty@psbma.org"
 __status__ = "Hack"
 
-import argparse, os, os.path, pathlib, re, smtplib, ssl, subprocess, sys, \
+import argparse, html, os, os.path, pathlib, re, smtplib, ssl, subprocess, sys, \
     xml.etree.ElementTree, xml.sax.saxutils, zipfile
 from email.message import EmailMessage
 from email.utils import formataddr
+
+# https://stackoverflow.com/a/49174340
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # Command lines for external applications on *my* system.
 __jarsigner__ = ['/usr/bin/jarsigner', '-verify', ]
@@ -43,7 +46,7 @@ State = Enum(['INIT', 'STUDENT', 'PRE', 'CODE', 'DONE'])
 
 class Zips:
     """Collects filenames from path matching _glob."""
-    _glob = r'**/*.signed.zip'      # globbing path and subdirectories
+    _glob = r'**/*.signed*.zip'     # globbing path and subdirectories
 
     def __init__(self, path='.'):
         """Initialize Zips & paths property."""
@@ -93,7 +96,7 @@ class Report:
     def _parse(self, text):
         """Parse text according to Codecheck.it report.html format."""
         # Regular Expression for parsing @author line.
-        author_regex = re.compile('@author[ ]+(([^\n<]*)[ ]+<([^\n>]*)>)',
+        author_regex = re.compile(r'(@author)?\s+(([\w\s.]*)\s+<([^\n>]*)>)',
                                   re.UNICODE + re.IGNORECASE)
         # Regular Expression for formatting author name.
         name_regex = re.compile('[^A-Za-z .]+', re.UNICODE)
@@ -114,26 +117,35 @@ class Report:
                 if attrib.get('class', None).lower() == 'score':
                     self._score = text
                     self._pf = 'FAIL'if eval(self._score) < 1 else 'PASS'
-            # <pre class="output">cube(2) expected:&lt;8&gt; but was:&lt;4&gt;</pre>
+            # <pre class="output">java.lang.AssertionError: cube(2) expected:&lt;8&gt; but was:&lt;4&gt;</pre>
             if tag.lower().endswith('pre') \
-                    and text and text.find('expected:') >= 0:
-                self._error += [text[: (text + '\n').find('\n')]]
+                and attrib.get('class', '').lower() == 'output':
+                markers = ['Error:', 'Exception:', ]
+                self._error += [html.escape(line) for line in text.split('\n')
+                                if any([line.find(m) >= 0 for m in markers])]
             #
-            # State machine to locate code within a student <pre> element.
+            # State machine to locate code within a student <pre> element
+            # which looks for a div w/ a 'student' class containing either:
+            # - pairs of pre tags (the 2nd is code) w/o an 'output' class; or
+            # - pre tags w/ an 'output' class (all are code).
+            # TODO: not a minimal, elegant implemetation
             #
             # If the <pre> tags were replaced with <pre class="code"> (or,
             # better yet <pre class="student code">), then this five-state
             # machine could be replaced w/ the following single conditional:
             #
-            # if 'code student' in attrib.get('class').split(' ')
+            # if 'student code' in attrib.get('class').split(' ')
             #
             if state is State.INIT:
                 if tag.lower().endswith('div'):
                     if 'student' in attrib.get('class', None).lower():
                         state = State.STUDENT
-            elif state is State.STUDENT and tag.lower().endswith('pre'):
+            elif state is State.STUDENT and tag.lower().endswith('pre') \
+                    and 'output' not in attrib.get('class', '').lower():
                 state = State.PRE
-            elif state is State.PRE:
+            elif state is State.PRE \
+                    or state is State.STUDENT and tag.lower().endswith('pre') \
+                    and 'output' in attrib.get('class', '').lower():
                 if tag.lower().endswith('pre'):
                     # TODO: do we need to escape .HTML, if it is for .MD?
                     self._code += [xml.sax.saxutils.escape(text, {
@@ -145,7 +157,7 @@ class Report:
                     if match:
                         if self._verbose:
                             print(f"@author match: {match.groups()}")
-                        name, email = match.group(2), match.group(3)
+                        name, email = match.group(3), match.group(4)
                         if self._bogus not in email:
                             self._name = name_regex.sub('', name).strip()
                             self._email = email
@@ -374,6 +386,8 @@ class Mailer:
             # Create secure connection with server and send email
             smtp, port = "smtp.gmail.com", 465
             context = ssl.create_default_context()
+            # https://stackoverflow.com/a/49174340
+            context = ssl._create_unverified_context()
             with smtplib.SMTP_SSL(smtp, port, context=context) as server:
                 server.login(self._username, self._password)
                 server.sendmail(self._sender,
@@ -485,8 +499,11 @@ def main(argv):
             if not report.signed:
                 print(f"ERROR: '{report.filename}' is unsigned")
             else:
+                canvas = "Don't make grading more difficult! " \
+                        "I need your e-mail address to give you any feedback."
                 print(f"ERROR: '{report.email}' not a valid e-mail address "
-                      f"in '{report.filename}'")
+                      f"in '{report.filename}' "
+                      f"{canvas}")
 
 
 if __name__ == '__main__':
