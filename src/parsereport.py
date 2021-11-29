@@ -96,10 +96,10 @@ class Report:
     def _parse(self, text):
         """Parse text according to Codecheck.it report.html format."""
         # Regular Expression for parsing @author line.
-        author_regex = re.compile(r'(@author)?\s+(([\w\s.]*)\s+<([^\n>]*)>)',
+        author_regex = re.compile(r'(@author)?\s+(([\w\s.-]*)\s+<([^\n>]*)>)',
                                   re.UNICODE + re.IGNORECASE)
         # Regular Expression for formatting author name.
-        name_regex = re.compile('[^A-Za-z .]+', re.UNICODE)
+        name_regex = re.compile('[^A-Za-z .-]+', re.UNICODE)
         state = State.INIT
         # Parse XHTML text into an ElementTree.
         parser = xml.etree.ElementTree.XMLParser(encoding='utf-8')
@@ -158,9 +158,9 @@ class Report:
                         if self._verbose:
                             print(f"@author match: {match.groups()}")
                         name, email = match.group(3), match.group(4)
-                        if self._bogus not in email:
-                            self._name = name_regex.sub('', name).strip()
-                            self._email = email
+                        # Save matches even if bogus.
+                        self._name = name_regex.sub('', name).strip()
+                        self._email = email
             elif tag.lower().endswith('div'):
                 if 'provided' in attrib.get('class', '').lower():
                     state = State.DONE
